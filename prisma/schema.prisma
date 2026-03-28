@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vaults    Vault[]
+}
+
+model Vault {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  icon        String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secrets     Secret[]
+}
+
+enum SecretType {
+  PASSWORD
+  API_KEY
+  TOKEN
+  ENV_VAR
+  OTHER
+}
+
+model Secret {
+  id        String     @id @default(cuid())
+  key       String
+  value     String
+  type      SecretType @default(OTHER)
+  url       String?
+  vaultId   String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  vault     Vault      @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+}

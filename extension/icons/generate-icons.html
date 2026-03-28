@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><body>
+<h2>DevVault Icon Generator</h2>
+<p>Right-click each icon and 'Save image as' to save the PNG files.</p>
+<div style="display:flex;gap:20px;align-items:end;background:#333;padding:20px;border-radius:8px;">
+
+<div style="text-align:center">
+  <canvas id="c16" width="16" height="16"></canvas>
+  <p style="color:white;font-family:monospace">16x16</p>
+</div>
+<div style="text-align:center">
+  <canvas id="c48" width="48" height="48"></canvas>
+  <p style="color:white;font-family:monospace">48x48</p>
+</div>
+<div style="text-align:center">
+  <canvas id="c128" width="128" height="128"></canvas>
+  <p style="color:white;font-family:monospace">128x128</p>
+</div>
+</div>
+<script>
+[16,48,128].forEach(size => {
+  const c = document.getElementById('c'+size);
+  const ctx = c.getContext('2d');
+  const r = size * 0.2;
+  
+  // Background
+  ctx.fillStyle = '#0A0A0F';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, r);
+  ctx.fill();
+  
+  // Border
+  ctx.strokeStyle = '#00FFFF';
+  ctx.lineWidth = Math.max(1, size * 0.04);
+  ctx.beginPath();
+  ctx.roundRect(size*0.1, size*0.1, size*0.8, size*0.8, r*0.8);
+  ctx.stroke();
+  
+  // Lock body
+  const cx = size/2, cy = size/2;
+  const bw = size*0.35, bh = size*0.28;
+  ctx.fillStyle = '#00FFFF';
+  ctx.beginPath();
+  ctx.roundRect(cx-bw/2, cy, bw, bh, size*0.03);
+  ctx.fill();
+  
+  // Lock shackle
+  ctx.strokeStyle = '#00FFFF';
+  ctx.lineWidth = Math.max(1.5, size*0.06);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(cx, cy, size*0.12, Math.PI, 0);
+  ctx.stroke();
+});
+</script>
+</body></html>

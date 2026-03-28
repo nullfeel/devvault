@@ -1,0 +1,65 @@
+/* ============================================
+   DevVault Chrome Extension - Content Styles
+   Minimal base styles; all UI lives in Shadow DOM
+   ============================================ */
+
+/* Shadow DOM host containers */
+.devvault-ext-save-prompt,
+.devvault-ext-credential-dropdown,
+.devvault-ext-password-suggest,
+.devvault-ext-toast {
+  all: initial;
+  position: fixed;
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  pointer-events: auto;
+}
+
+.devvault-ext-save-prompt {
+  bottom: 20px;
+  right: 20px;
+}
+
+.devvault-ext-toast {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.devvault-ext-icon-anchor {
+  all: initial;
+  position: absolute;
+  z-index: 2147483646;
+  pointer-events: auto;
+}
+
+/* ---- Keyframe Animations ---- */
+@keyframes devvault-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes devvault-slide-down {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(16px); }
+}
+
+@keyframes devvault-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes devvault-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes devvault-scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes devvault-countdown {
+  from { width: 100%; }
+  to   { width: 0%; }
+}

@@ -1,27 +1,429 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════
+   DEVVAULT — Cyberpunk Design System
+   ═══════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core backgrounds */
+  --bg-primary: #0A0A0F;
+  --bg-secondary: #12121A;
+  --bg-card: rgba(18, 18, 26, 0.8);
+  --bg-elevated: #1A1A2E;
+
+  /* Neon accent palette */
+  --neon-cyan: #00FFFF;
+  --neon-magenta: #FF00FF;
+  --neon-green: #00FF41;
+  --neon-purple: #B967FF;
+
+  /* Typography */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #475569;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.02);
+
+  /* Glow intensities */
+  --glow-sm: 0 0 5px;
+  --glow-md: 0 0 15px;
+  --glow-lg: 0 0 30px;
+  --glow-xl: 0 0 60px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ───────────────────────────────────────────────────────────
+   Base Styles
+   ─────────────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
+::selection {
+  background: rgba(0, 255, 255, 0.25);
+  color: var(--neon-cyan);
+}
+
+/* ───────────────────────────────────────────────────────────
+   Custom Scrollbar
+   ─────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.2);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.45);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-primary);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 255, 0.2) var(--bg-primary);
+}
+
+/* ───────────────────────────────────────────────────────────
+   Neon Text Glow Utilities
+   ─────────────────────────────────────────────────────────── */
+
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .neon-text-cyan {
+    color: var(--neon-cyan);
+    text-shadow:
+      var(--glow-sm) rgba(0, 255, 255, 0.6),
+      var(--glow-md) rgba(0, 255, 255, 0.4),
+      var(--glow-lg) rgba(0, 255, 255, 0.2),
+      var(--glow-xl) rgba(0, 255, 255, 0.1);
   }
+
+  .neon-text-magenta {
+    color: var(--neon-magenta);
+    text-shadow:
+      var(--glow-sm) rgba(255, 0, 255, 0.6),
+      var(--glow-md) rgba(255, 0, 255, 0.4),
+      var(--glow-lg) rgba(255, 0, 255, 0.2),
+      var(--glow-xl) rgba(255, 0, 255, 0.1);
+  }
+
+  .neon-text-green {
+    color: var(--neon-green);
+    text-shadow:
+      var(--glow-sm) rgba(0, 255, 65, 0.6),
+      var(--glow-md) rgba(0, 255, 65, 0.4),
+      var(--glow-lg) rgba(0, 255, 65, 0.2),
+      var(--glow-xl) rgba(0, 255, 65, 0.1);
+  }
+
+  .neon-text-purple {
+    color: var(--neon-purple);
+    text-shadow:
+      var(--glow-sm) rgba(185, 103, 255, 0.6),
+      var(--glow-md) rgba(185, 103, 255, 0.4),
+      var(--glow-lg) rgba(185, 103, 255, 0.2),
+      var(--glow-xl) rgba(185, 103, 255, 0.1);
+  }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Glassmorphism Card
+   ─────────────────────────────────────────────────────────── */
+
+@layer components {
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-highlight),
+      0 4px 24px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(0, 255, 255, 0.2);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-highlight),
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 0 20px rgba(0, 255, 255, 0.05);
+  }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Neon Border Glow
+   ─────────────────────────────────────────────────────────── */
+
+.neon-border {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background-clip: padding-box;
+}
+
+.neon-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--neon-cyan),
+    var(--neon-magenta),
+    var(--neon-purple),
+    var(--neon-cyan)
+  );
+  background-size: 300% 300%;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: neon-border-rotate 4s linear infinite;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.neon-border:hover::before {
+  opacity: 1;
+}
+
+@keyframes neon-border-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Glitch Animation
+   ─────────────────────────────────────────────────────────── */
+
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.glitch::before {
+  color: var(--neon-cyan);
+  animation: glitch-shift-1 2.5s infinite steps(2, end);
+  clip-path: inset(0 0 65% 0);
+  z-index: -1;
+}
+
+.glitch::after {
+  color: var(--neon-magenta);
+  animation: glitch-shift-2 2.5s infinite steps(2, end);
+  clip-path: inset(35% 0 0 0);
+  z-index: -1;
+}
+
+@keyframes glitch-shift-1 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-3px, 2px) skewX(-2deg); }
+  40% { transform: translate(3px, -1px) skewX(1deg); }
+  60% { transform: translate(-2px, 1px) skewX(-1deg); }
+  80% { transform: translate(2px, -2px) skewX(2deg); }
+}
+
+@keyframes glitch-shift-2 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(3px, -2px) skewX(2deg); }
+  40% { transform: translate(-3px, 1px) skewX(-1deg); }
+  60% { transform: translate(2px, -1px) skewX(1deg); }
+  80% { transform: translate(-2px, 2px) skewX(-2deg); }
+}
+
+/* Compact glitch for inline use */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  10% { transform: translate(-2px, 1px) skewX(-1deg); }
+  30% { transform: translate(2px, -1px) skewX(1deg); }
+  50% { transform: translate(-1px, 2px) skewX(-0.5deg); }
+  70% { transform: translate(1px, -2px) skewX(0.5deg); }
+  90% { transform: translate(-2px, 0) skewX(-1deg); }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Scanlines Overlay
+   ─────────────────────────────────────────────────────────── */
+
+.scanlines {
+  position: relative;
+}
+
+.scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+  animation: scanline-scroll 8s linear infinite;
+}
+
+@keyframes scanline-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Film Grain / Noise Effect
+   ─────────────────────────────────────────────────────────── */
+
+.film-grain {
+  position: relative;
+}
+
+.film-grain::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 50;
+  animation: grain-drift 0.5s steps(1) infinite;
+  opacity: 0.5;
+}
+
+@keyframes grain-drift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2%, 3%); }
+  50% { transform: translate(3%, -1%); }
+  75% { transform: translate(-1%, -2%); }
+  100% { transform: translate(2%, 1%); }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Cyber Grid Background
+   ─────────────────────────────────────────────────────────── */
+
+.cyber-grid {
+  position: relative;
+}
+
+.cyber-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%);
+}
+
+/* ───────────────────────────────────────────────────────────
+   Floating / Pulse / Blink Animations
+   ─────────────────────────────────────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-neon {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.85;
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Terminal cursor */
+.terminal-cursor::after {
+  content: '\2588';
+  color: var(--neon-green);
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+/* ───────────────────────────────────────────────────────────
+   Utility Animations
+   ─────────────────────────────────────────────────────────── */
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s ease-in-out infinite;
+}
+
+.animate-glitch {
+  animation: glitch 2.5s infinite steps(2, end);
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* ───────────────────────────────────────────────────────────
+   Shimmer Text Effect
+   ─────────────────────────────────────────────────────────── */
+
+@keyframes shimmer {
+  0% { background-position: 200% 50%; }
+  100% { background-position: -200% 50%; }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Focus / Accessibility
+   ─────────────────────────────────────────────────────────── */
+
+*:focus-visible {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ───────────────────────────────────────────────────────────
+   Smooth Transitions
+   ─────────────────────────────────────────────────────────── */
+
+a, button, input, textarea, select {
+  transition: color 0.2s ease, background-color 0.2s ease,
+              border-color 0.2s ease, box-shadow 0.2s ease,
+              opacity 0.2s ease;
 }

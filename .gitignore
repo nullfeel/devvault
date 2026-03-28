@@ -26,7 +26,17 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+
+# prisma
+prisma/dev.db
+prisma/dev.db-journal
+*.db
+*.db-journal
+
+# prisma migrations (keep schema, ignore generated)
+prisma/migrations/
 
 # vercel
 .vercel
