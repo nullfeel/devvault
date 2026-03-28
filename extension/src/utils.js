@@ -141,6 +141,19 @@ function getPasswordStrength(password) {
 }
 
 /**
+ * Get the current active tab's URL.
+ * @returns {Promise<string>}
+ */
+async function getCurrentTabUrl() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tab?.url || '';
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Get hostname from a URL string.
  * @param {string} url
  * @returns {string}

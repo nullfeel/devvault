@@ -631,7 +631,7 @@
     try {
       const data = await apiCall('/api/ext/vaults');
       const vaults = data.vaults || data || [];
-      el.saveVault.innerHTML = '<option value="">Select a vault...</option>';
+      el.saveVault.innerHTML = '<option value="">Auto (Passwords vault)</option>';
       vaults.forEach((v) => {
         const opt = document.createElement('option');
         opt.value = v.id;
@@ -655,17 +655,15 @@
       showToast('Please fill all fields', 'error');
       return;
     }
-    if (!vaultId) {
-      showToast('Please select a vault', 'error');
-      return;
-    }
 
     setButtonLoading(el.saveSubmitBtn, true);
 
     try {
+      const body = { url, username, password };
+      if (vaultId) body.vaultId = vaultId;
       await apiCall('/api/ext/credentials', {
         method: 'POST',
-        body: { url, username, password, vaultId },
+        body,
       });
       showToast('Saved!', 'success');
       await loadMainScreen();
