@@ -4,9 +4,9 @@
 
 # DevVault
 
-**Military-grade secrets management for developers.**
+**Open-source secrets manager for developers.**
 
-AES-256-GCM encryption · Vault organization · Team sharing · Terminal UI
+AES-256-GCM encryption · Vault organization · Chrome extension · Cyberpunk UI
 
 <br/>
 
@@ -15,25 +15,35 @@ AES-256-GCM encryption · Vault organization · Team sharing · Terminal UI
 ![Tailwind](https://img.shields.io/badge/Tailwind-0d0d0d?style=flat-square&logo=tailwindcss&logoColor=38bdf8)
 ![Three.js](https://img.shields.io/badge/Three.js-0d0d0d?style=flat-square&logo=threedotjs&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-0d0d0d?style=flat-square&logo=prisma&logoColor=5a67d8)
-![Framer Motion](https://img.shields.io/badge/Framer_Motion-0d0d0d?style=flat-square&logo=framer&logoColor=00FFFF)
+![Chrome](https://img.shields.io/badge/Chrome_Extension-0d0d0d?style=flat-square&logo=googlechrome&logoColor=4285F4)
 
 <br/>
+
+> **Note:** This is an early prototype and open-source project. It may contain bugs and is not recommended for production use with real credentials yet. Contributions and feedback are welcome.
 
 </div>
 
 ## About
 
-DevVault is a full-stack credentials and secrets manager built for developers who take security seriously. It features AES-256-GCM encryption, organized vault management, and a cyberpunk-inspired UI with 3D visuals.
+DevVault is a full-stack credentials and secrets manager with a Chrome extension for auto-fill and password management. It features AES-256-GCM encryption, organized vault management, and a cyberpunk-inspired UI with 3D visuals.
 
 ## Features
 
-- **AES-256-GCM Encryption** — Military-grade encryption for all stored secrets
+### Web App
+- **AES-256-GCM Encryption** — All secrets encrypted at rest
 - **Vault Organization** — Group secrets by project, environment, or team
-- **3D Cyberpunk UI** — Immersive interface with Three.js, glassmorphism, and neon effects
-- **Terminal Aesthetic** — HUD-style dashboard with real-time stats
-- **Type Classification** — Categorize secrets as passwords, API keys, tokens, or env vars
-- **Secure Auth** — NextAuth.js with bcrypt password hashing and JWT sessions
-- **Responsive** — Fully responsive design from mobile to desktop
+- **Type Classification** — Categorize as passwords, API keys, tokens, or env vars
+- **3D Cyberpunk UI** — Immersive interface with Three.js and neon effects
+- **Dashboard** — Stats, vault management, secret CRUD
+- **Secure Auth** — NextAuth.js with bcrypt and JWT sessions
+
+### Chrome Extension
+- **Auto-fill** — Detects login forms and fills credentials
+- **Save Prompt** — Asks to save after logging into a site
+- **Password Generator** — Configurable length, character types, strength indicator
+- **Password Suggestions** — Suggests strong passwords on registration forms
+- **Vault Browser** — Browse and copy secrets from the popup
+- **Minimal UI** — Clean dark interface inspired by 1Password
 
 ## Tech Stack
 
@@ -42,67 +52,123 @@ DevVault is a full-stack credentials and secrets manager built for developers wh
 | **Framework** | Next.js 14 (App Router) |
 | **Language** | TypeScript |
 | **Styling** | Tailwind CSS + Framer Motion |
-| **3D Graphics** | Three.js + React Three Fiber + Drei |
+| **3D Graphics** | Three.js + React Three Fiber |
 | **Database** | SQLite + Prisma ORM |
 | **Auth** | NextAuth.js + bcryptjs |
 | **Encryption** | AES-256-GCM (Node.js crypto) |
+| **Extension** | Chrome Manifest V3 (vanilla JS) |
 
 ## Getting Started
 
+### Web App
+
 ```bash
-# Clone the repository
 git clone https://github.com/nullfeel/devvault.git
 cd devvault
 
-# Install dependencies
 npm install
 
-# Generate Prisma client and push schema
+cp .env.example .env
+# Edit .env with your own secrets
+
 npx prisma generate
 npx prisma db push
 
-# Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the app.
+Open [http://localhost:3000](http://localhost:3000)
+
+### Chrome Extension
+
+1. Open `chrome://extensions` in Chrome
+2. Enable **Developer mode** (top right)
+3. Click **Load unpacked**
+4. Select the `extension/` folder
+5. Click the DevVault icon in the toolbar and sign in
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and configure:
-
 ```env
 DATABASE_URL="file:./dev.db"
-NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_SECRET="generate-a-random-secret"
 NEXTAUTH_URL="http://localhost:3000"
-ENCRYPTION_KEY="your-32-byte-hex-key"
+ENCRYPTION_KEY="generate-a-random-32-byte-hex"
+```
+
+Generate secrets with:
+```bash
+openssl rand -hex 32
 ```
 
 ## Project Structure
 
 ```
-src/
-├── app/
-│   ├── (auth)/          # Login & Register pages
-│   ├── (dashboard)/     # Dashboard & Vault pages
-│   ├── api/             # API routes (auth, vaults, secrets)
-│   └── page.tsx         # Landing page
-├── components/
-│   ├── 3d/              # Three.js 3D components
-│   ├── dashboard/       # Dashboard components
-│   ├── landing/         # Landing page sections
-│   └── ui/              # Reusable UI components
-└── lib/
-    ├── auth.ts          # NextAuth configuration
-    ├── crypto.ts        # AES-256 encryption utilities
-    └── prisma.ts        # Prisma client singleton
+devvault/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/              # Login & Register
+│   │   ├── (dashboard)/         # Dashboard, Vaults, Settings
+│   │   └── api/                 # REST API + Extension API
+│   ├── components/
+│   │   ├── 3d/                  # Three.js scenes
+│   │   ├── dashboard/           # Sidebar, nav
+│   │   ├── landing/             # Landing page sections
+│   │   └── ui/                  # Button, Input, Modal, Toast
+│   └── lib/
+│       ├── auth.ts              # NextAuth config
+│       ├── crypto.ts            # AES-256-GCM encrypt/decrypt
+│       ├── ext-auth.ts          # Extension token auth
+│       └── prisma.ts            # Database client
+├── extension/
+│   ├── manifest.json            # Chrome Manifest V3
+│   ├── popup.html               # Extension popup
+│   └── src/
+│       ├── popup.js             # Popup logic
+│       ├── popup.css            # Popup styles
+│       ├── content.js           # Auto-fill & save prompts
+│       ├── background.js        # Service worker
+│       └── utils.js             # Shared utilities
+└── prisma/
+    └── schema.prisma            # Database schema
 ```
 
-## Deploy
+## API Endpoints
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nullfeel/devvault)
+### Web App (session auth)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/change-password` | Change password |
+| GET/POST | `/api/vaults` | List/create vaults |
+| GET/PUT/DELETE | `/api/vaults/[id]` | Vault CRUD |
+| GET/POST | `/api/vaults/[id]/secrets` | List/create secrets |
+| PUT/DELETE | `/api/vaults/[id]/secrets/[secretId]` | Secret CRUD |
 
-> **Note:** For production, use PostgreSQL instead of SQLite and set secure environment variables.
+### Extension (token auth)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/ext/login` | Get auth token |
+| GET | `/api/ext/vaults` | List vaults |
+| GET/POST | `/api/ext/vaults/[id]/secrets` | Vault secrets |
+| GET | `/api/ext/credentials?url=` | Search by URL |
+| POST | `/api/ext/credentials` | Quick save credential |
+
+## Known Issues
+
+- SQLite is used for development; use PostgreSQL for production
+- Extension auto-fill may not work on all sites (Shadow DOM limitations)
+- No data export/import yet
+- No browser sync across devices
+
+## Contributing
+
+This is an open-source prototype. Feel free to open issues or submit PRs.
+
+1. Fork the repository
+2. Create your branch (`git checkout -b feature/my-feature`)
+3. Commit your changes
+4. Push and open a Pull Request
 
 ## License
 
