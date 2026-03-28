@@ -1,6 +1,6 @@
 /* ============================================
    DevVault Chrome Extension - Popup Logic
-   Minimalist Premium Rewrite
+   Premium Redesign
    ============================================ */
 
 (function () {
@@ -28,30 +28,32 @@
 
   const el = {
     // Login
+    loginForm: $('#login-form'),
     loginEmail: $('#login-email'),
     loginPassword: $('#login-password'),
-    loginPwToggle: $('#login-pw-toggle'),
+    loginTogglePw: $('#login-toggle-pw'),
     loginBtn: $('#login-btn'),
     loginError: $('#login-error'),
     loginServerLink: $('#login-server-link'),
     serverUrlDisplay: $('#server-url-display'),
 
     // Main
+    mainAddBtn: $('#main-add-btn'),
     mainSettingsBtn: $('#main-settings-btn'),
-    searchInput: $('#search-input'),
+    mainGenerateBtn: $('#main-generate-btn'),
     currentUrl: $('#current-url'),
     siteCredsList: $('#site-creds-list'),
     vaultCount: $('#vault-count'),
     vaultsList: $('#vaults-list'),
-    genPasswordBtn: $('#gen-password-btn'),
-    saveCredsBtn: $('#save-creds-btn'),
 
     // Vault
     vaultBackBtn: $('#vault-back-btn'),
     vaultName: $('#vault-name'),
+    vaultSecretCount: $('#vault-secret-count'),
     vaultSecretsList: $('#vault-secrets-list'),
 
     // Save
+    saveForm: $('#save-form'),
     saveBackBtn: $('#save-back-btn'),
     saveUrl: $('#save-url'),
     saveUsername: $('#save-username'),
@@ -81,10 +83,20 @@
     settingsApiUrl: $('#settings-api-url'),
     settingsSaveUrlBtn: $('#settings-save-url-btn'),
     settingsEmail: $('#settings-email'),
-    settingsLogoutBtn: $('#settings-logout-btn'),
+    settingsSignoutBtn: $('#settings-signout-btn'),
 
     // Toast
     toastContainer: $('#toast-container'),
+  };
+
+  // ---- SVG icon strings ----
+  const icons = {
+    copy: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>',
+    eye: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3C5.5 3 1.7 5.9.5 10c1.2 4.1 5 7 9.5 7s8.3-2.9 9.5-7c-1.2-4.1-5-7-9.5-7zm0 11.5c-2.5 0-4.5-2-4.5-4.5s2-4.5 4.5-4.5 4.5 2 4.5 4.5-2 4.5-4.5 4.5zm0-7.2c-1.5 0-2.7 1.2-2.7 2.7s1.2 2.7 2.7 2.7 2.7-1.2 2.7-2.7-1.2-2.7-2.7-2.7z"/></svg>',
+    chevron: '<svg class="icon vault-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.3 14.7a1 1 0 010-1.4L10.6 10 7.3 6.7a1 1 0 011.4-1.4l4 4a1 1 0 010 1.4l-4 4a1 1 0 01-1.4 0z" clip-rule="evenodd"/></svg>',
+    shield: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2A11.954 11.954 0 0110 1.944z" clip-rule="evenodd"/></svg>',
+    lock: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>',
+    folder: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>',
   };
 
   // ================================================================
@@ -107,7 +119,6 @@
     }
     showScreen(name);
 
-    // Auto-focus first input on screen
     setTimeout(() => {
       const firstInput = screens[name]?.querySelector('input:not([type="checkbox"]):not([type="range"])');
       if (firstInput && opts.focus !== false) firstInput.focus();
@@ -122,7 +133,6 @@
     }
   }
 
-  // Escape key to go back
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const current = screenIds.find((id) => screens[id]?.classList.contains('active'));
@@ -154,9 +164,9 @@
 
   function setButtonLoading(btn, loading) {
     const text = btn.querySelector('.btn-text');
-    const spinner = btn.querySelector('.loading');
+    const loader = btn.querySelector('.btn-loader');
     if (text) text.classList.toggle('hidden', loading);
-    if (spinner) spinner.classList.toggle('hidden', !loading);
+    if (loader) loader.classList.toggle('hidden', !loading);
     btn.disabled = loading;
   }
 
@@ -165,10 +175,8 @@
   // ================================================================
 
   function updateStrengthBar(barEl, password) {
-    // Remove old strength classes
-    barEl.className = 'strength-bar';
     const strength = getPasswordStrength(password);
-    barEl.classList.add(`strength-${strength}`);
+    barEl.setAttribute('data-strength', strength);
   }
 
   // ================================================================
@@ -181,13 +189,13 @@
     return div.innerHTML;
   }
 
-  function getSecretTypeBadgeClass(type) {
+  function getSecretTypeClass(type) {
     const t = (type || '').toLowerCase();
-    if (t.includes('password')) return 'badge-password';
-    if (t.includes('api') || t.includes('key')) return 'badge-apikey';
-    if (t.includes('token')) return 'badge-token';
-    if (t.includes('env')) return 'badge-envvar';
-    return 'badge-count';
+    if (t.includes('password')) return 'type-password';
+    if (t.includes('api') || t.includes('key')) return 'type-apikey';
+    if (t.includes('token')) return 'type-token';
+    if (t.includes('env')) return 'type-envvar';
+    return 'type-other';
   }
 
   function togglePasswordVisibility(inputEl, toggleBtn) {
@@ -199,15 +207,15 @@
     if (eyeOffIcon) eyeOffIcon.classList.toggle('hidden', isPassword);
   }
 
-  // SVG icon helpers (inline for performance)
-  const icons = {
-    copy: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>',
-    eye: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3C5.5 3 1.7 5.9.5 10c1.2 4.1 5 7 9.5 7s8.3-2.9 9.5-7c-1.2-4.1-5-7-9.5-7zm0 11.5c-2.5 0-4.5-2-4.5-4.5s2-4.5 4.5-4.5 4.5 2 4.5 4.5-2 4.5-4.5 4.5zm0-7.2c-1.5 0-2.7 1.2-2.7 2.7s1.2 2.7 2.7 2.7 2.7-1.2 2.7-2.7-1.2-2.7-2.7-2.7z"/></svg>',
-    chevron: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.3 14.7a1 1 0 010-1.4L10.6 10 7.3 6.7a1 1 0 011.4-1.4l4 4a1 1 0 010 1.4l-4 4a1 1 0 01-1.4 0z" clip-rule="evenodd"/></svg>',
-    lock: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>',
-    shield: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2A11.954 11.954 0 0110 1.944z" clip-rule="evenodd"/></svg>',
-    trash: '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>',
-  };
+  function getFaviconUrl(hostname) {
+    if (!hostname) return '';
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+  }
+
+  function getFallbackLetter(hostname) {
+    if (!hostname) return '?';
+    return hostname.charAt(0).toUpperCase();
+  }
 
   // ================================================================
   // INITIALIZATION
@@ -242,7 +250,9 @@
   // LOGIN SCREEN
   // ================================================================
 
-  async function handleLogin() {
+  async function handleLogin(e) {
+    if (e) e.preventDefault();
+
     const email = el.loginEmail.value.trim();
     const password = el.loginPassword.value;
 
@@ -284,16 +294,10 @@
   }
 
   // Login event listeners
-  el.loginBtn.addEventListener('click', handleLogin);
-  el.loginPassword.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleLogin();
-  });
-  el.loginEmail.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') el.loginPassword.focus();
-  });
+  el.loginForm.addEventListener('submit', handleLogin);
 
-  el.loginPwToggle.addEventListener('click', () => {
-    togglePasswordVisibility(el.loginPassword, el.loginPwToggle);
+  el.loginTogglePw.addEventListener('click', () => {
+    togglePasswordVisibility(el.loginPassword, el.loginTogglePw);
   });
 
   el.loginServerLink.addEventListener('click', () => {
@@ -307,12 +311,10 @@
   async function loadMainScreen() {
     navigateTo('main', { focus: false });
 
-    // Get current tab
     currentTabUrl = await getCurrentTabUrl();
     currentHostname = getHostname(currentTabUrl);
     el.currentUrl.textContent = currentHostname || 'No active tab';
 
-    // Load data in parallel
     await Promise.all([
       loadSiteCredentials(currentTabUrl),
       loadVaults(),
@@ -349,8 +351,8 @@
     el.siteCredsList.innerHTML = `
       <div class="empty-state">
         ${icons.shield}
-        <span>${escapeHtml(msg || 'No saved passwords for this site')}</span>
-        ${!msg ? '<button class="empty-state-link" id="empty-save-link">Save one</button>' : ''}
+        <p>${escapeHtml(msg || 'No saved passwords for this site')}</p>
+        ${!msg ? '<button class="link-btn" id="empty-save-link">Save one</button>' : ''}
       </div>
     `;
     const link = el.siteCredsList.querySelector('#empty-save-link');
@@ -358,7 +360,6 @@
   }
 
   function parseCredValue(cred) {
-    // API stores password credentials as JSON: {"username":"...","password":"..."}
     let username = cred.key || 'Unknown';
     let password = cred.value || '';
     try {
@@ -373,52 +374,59 @@
 
   function createCredentialCard(cred, index) {
     const card = document.createElement('div');
-    card.className = 'credential-card';
+    card.className = 'cred-card';
 
     const { username, password } = parseCredValue(cred);
-    const faviconUrl = currentHostname
-      ? `https://www.google.com/s2/favicons?domain=${currentHostname}&sz=32`
-      : '';
+    const faviconUrl = getFaviconUrl(currentHostname);
+    const fallback = getFallbackLetter(currentHostname);
 
     card.innerHTML = `
-      ${faviconUrl ? `<img src="${faviconUrl}" class="credential-favicon" alt="" onerror="this.style.display='none'">` : ''}
-      <div class="credential-info">
-        <div class="credential-username">${escapeHtml(username)}</div>
-        <span class="credential-password pw-dots">\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</span>
+      <div class="cred-favicon">
+        ${faviconUrl
+          ? `<img src="${faviconUrl}" alt="" onerror="this.parentElement.innerHTML='<span class=\\'fallback\\'>${fallback}</span>'">`
+          : `<span class="fallback">${fallback}</span>`
+        }
       </div>
-      <div class="credential-actions">
-        <button class="btn-icon copy-user-btn" title="Copy username">${icons.copy}</button>
-        <button class="btn-icon toggle-pw-btn" title="Show password">${icons.eye}</button>
-        <button class="btn-autofill" data-index="${index}">Autofill</button>
+      <div class="cred-info">
+        <div class="cred-username">${escapeHtml(username)}</div>
+        <div class="cred-site">${escapeHtml(currentHostname)}</div>
+        <div class="cred-pw-row">
+          <span class="cred-pw masked">\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</span>
+        </div>
+      </div>
+      <div class="cred-actions">
+        <button class="icon-btn copy-user-btn" title="Copy username">${icons.copy}</button>
+        <button class="icon-btn toggle-pw-btn" title="Show password">${icons.eye}</button>
+        <button class="cred-autofill-btn" data-index="${index}">Autofill</button>
       </div>
     `;
 
-    const pwDisplay = card.querySelector('.credential-password');
+    const pwDisplay = card.querySelector('.cred-pw');
     let pwVisible = false;
 
     // Copy username
     card.querySelector('.copy-user-btn').addEventListener('click', async () => {
       await copyToClipboard(username);
-      showToast('Copied!', 'success', 1500);
+      showToast('Username copied', 'success', 1500);
     });
 
     // Toggle password visibility
     card.querySelector('.toggle-pw-btn').addEventListener('click', async () => {
       if (pwVisible) {
         pwDisplay.textContent = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
-        pwDisplay.classList.add('pw-dots');
+        pwDisplay.className = 'cred-pw masked';
         pwVisible = false;
       } else {
         pwDisplay.textContent = password;
-        pwDisplay.classList.remove('pw-dots');
+        pwDisplay.className = 'cred-pw revealed';
         pwVisible = true;
         await copyToClipboard(password);
-        showToast('Copied!', 'success', 1500);
+        showToast('Password copied', 'success', 1500);
       }
     });
 
     // Autofill
-    card.querySelector('.btn-autofill').addEventListener('click', async () => {
+    card.querySelector('.cred-autofill-btn').addEventListener('click', async () => {
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
@@ -451,10 +459,10 @@
       if (Array.isArray(allVaults) && allVaults.length > 0) {
         renderVaults(allVaults);
       } else {
-        el.vaultsList.innerHTML = '<div class="empty-state">' + icons.lock + '<span>No vaults found</span></div>';
+        el.vaultsList.innerHTML = `<div class="empty-state">${icons.lock}<p>No vaults found</p></div>`;
       }
     } catch {
-      el.vaultsList.innerHTML = '<div class="empty-state"><span>Could not load vaults</span></div>';
+      el.vaultsList.innerHTML = '<div class="empty-state"><p>Could not load vaults</p></div>';
     }
   }
 
@@ -472,55 +480,25 @@
     const count = vault.secretCount ?? vault.secrets?.length ?? 0;
 
     item.innerHTML = `
-      <div class="vault-item-left">
-        <span class="vault-item-name">${escapeHtml(vault.name)}</span>
+      <div class="vault-icon">${icons.folder}</div>
+      <div class="vault-info">
+        <div class="vault-name">${escapeHtml(vault.name)}</div>
+        <div class="vault-meta">${count} secret${count !== 1 ? 's' : ''}</div>
       </div>
-      <div class="vault-item-right">
-        <span class="badge badge-count">${count}</span>
-        <span class="vault-item-chevron">${icons.chevron}</span>
-      </div>
+      ${icons.chevron}
     `;
 
     item.addEventListener('click', () => openVaultScreen(vault));
     return item;
   }
 
-  // -- Search --
-
-  let searchTimeout = null;
-  el.searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const query = el.searchInput.value.trim().toLowerCase();
-      filterVaults(query);
-    }, 200);
-  });
-
-  function filterVaults(query) {
-    if (!query) {
-      renderVaults(allVaults);
-      renderSiteCredentials(currentSiteCreds);
-      return;
-    }
-
-    const filtered = allVaults.filter((v) =>
-      v.name.toLowerCase().includes(query)
-    );
-    renderVaults(filtered);
-
-    const filteredCreds = currentSiteCreds.filter((c) => {
-      const u = (c.username || c.key || '').toLowerCase();
-      return u.includes(query);
-    });
-    if (filteredCreds.length > 0) {
-      renderSiteCredentials(filteredCreds);
-    }
-  }
-
   // Main screen listeners
-  el.mainSettingsBtn.addEventListener('click', () => navigateTo('settings'));
-  el.saveCredsBtn.addEventListener('click', openSaveScreen);
-  el.genPasswordBtn.addEventListener('click', () => openGeneratorScreen());
+  el.mainSettingsBtn.addEventListener('click', () => {
+    el.settingsEmail.textContent = userEmail || el.loginEmail.value || '--';
+    navigateTo('settings');
+  });
+  el.mainAddBtn.addEventListener('click', openSaveScreen);
+  el.mainGenerateBtn.addEventListener('click', () => openGeneratorScreen());
 
   // ================================================================
   // VAULT SCREEN
@@ -538,11 +516,14 @@
         secrets = data.secrets || data || [];
       }
 
+      const count = secrets.length;
+      el.vaultSecretCount.textContent = `${count} secret${count !== 1 ? 's' : ''}`;
+
       if (secrets.length === 0) {
         el.vaultSecretsList.innerHTML = `
           <div class="empty-state">
             ${icons.shield}
-            <span>No secrets in this vault</span>
+            <p>No secrets in this vault</p>
           </div>
         `;
       } else {
@@ -552,7 +533,7 @@
         });
       }
     } catch {
-      el.vaultSecretsList.innerHTML = '<div class="empty-state"><span>Could not load secrets</span></div>';
+      el.vaultSecretsList.innerHTML = '<div class="empty-state"><p>Could not load secrets</p></div>';
     }
   }
 
@@ -560,24 +541,21 @@
     const item = document.createElement('div');
     item.className = 'secret-item';
 
-    const typeBadge = getSecretTypeBadgeClass(secret.type);
-    const typeLabel = escapeHtml(secret.type || 'text');
+    const typeClass = getSecretTypeClass(secret.type);
+    const typeLabel = escapeHtml(secret.type || 'OTHER');
 
     item.innerHTML = `
-      <div class="secret-info">
-        <span class="secret-key">${escapeHtml(secret.key || secret.name || 'Untitled')}</span>
-        <span class="badge ${typeBadge}">${typeLabel}</span>
-      </div>
+      <span class="secret-key">${escapeHtml(secret.key || secret.name || 'Untitled')}</span>
+      <span class="secret-type ${typeClass}">${typeLabel}</span>
       <div class="secret-actions">
-        <button class="btn-icon toggle-secret-btn" title="Show value">${icons.eye}</button>
-        <button class="btn-icon copy-secret-btn" title="Copy">${icons.copy}</button>
+        <button class="icon-btn toggle-secret-btn" title="Show value">${icons.eye}</button>
+        <button class="icon-btn copy-secret-btn" title="Copy">${icons.copy}</button>
       </div>
     `;
 
     let valueVisible = false;
     let valueEl = null;
 
-    // Toggle value
     item.querySelector('.toggle-secret-btn').addEventListener('click', () => {
       if (valueVisible && valueEl) {
         valueEl.remove();
@@ -587,15 +565,11 @@
         valueEl = document.createElement('div');
         valueEl.className = 'secret-value';
         valueEl.textContent = secret.value || '';
-        valueEl.style.marginTop = '4px';
-        valueEl.style.padding = '0 16px 8px';
-        valueEl.style.maxWidth = '100%';
         item.appendChild(valueEl);
         valueVisible = true;
       }
     });
 
-    // Copy
     item.querySelector('.copy-secret-btn').addEventListener('click', async () => {
       await copyToClipboard(secret.value || '');
       showToast('Copied!', 'success', 1500);
@@ -645,7 +619,9 @@
     el.saveUsername.focus();
   }
 
-  async function handleSaveCredentials() {
+  async function handleSaveCredentials(e) {
+    if (e) e.preventDefault();
+
     const url = el.saveUrl.value.trim();
     const username = el.saveUsername.value.trim();
     const password = el.savePassword.value;
@@ -675,7 +651,7 @@
   }
 
   el.saveBackBtn.addEventListener('click', goBack);
-  el.saveSubmitBtn.addEventListener('click', handleSaveCredentials);
+  el.saveForm.addEventListener('submit', handleSaveCredentials);
   el.savePassword.addEventListener('input', () => {
     updateStrengthBar(el.savePwStrength, el.savePassword.value);
   });
@@ -736,7 +712,6 @@
 
     if (generatorReturnTo === 'save') {
       generatedPasswordForSave = pw;
-      // Go back to save screen with password filled
       el.savePassword.value = pw;
       el.savePassword.type = 'text';
       updateStrengthBar(el.savePwStrength, pw);
@@ -758,8 +733,10 @@
   // ================================================================
 
   el.settingsBackBtn.addEventListener('click', () => {
-    const token = getTokenSync();
-    if (token) {
+    const hasToken = screens.main.classList.contains('active') ||
+      screens.vault.classList.contains('active') ||
+      previousScreen === 'main';
+    if (hasToken) {
       goBack();
     } else {
       navigateTo('login');
@@ -775,24 +752,12 @@
     }
   });
 
-  el.settingsLogoutBtn.addEventListener('click', async () => {
+  el.settingsSignoutBtn.addEventListener('click', async () => {
     await clearToken();
     userEmail = '';
     showToast('Signed out', 'info');
     navigateTo('login', { noPrevious: true });
     el.loginPassword.value = '';
-  });
-
-  // Sync helper for checking token without await
-  function getTokenSync() {
-    // We use a simple check - if we're on main screen, we have a token
-    return screens.main.classList.contains('active') || screens.vault.classList.contains('active');
-  }
-
-  // Update settings email when showing settings
-  const origSettingsClick = el.mainSettingsBtn.onclick;
-  el.mainSettingsBtn.addEventListener('click', () => {
-    el.settingsEmail.textContent = userEmail || el.loginEmail.value || '--';
   });
 
   // ================================================================
